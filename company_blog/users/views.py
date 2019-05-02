@@ -7,7 +7,7 @@ from company_blog.users.picture_handler import add_profile_pic
 
 users = Blueprint('users', __name__)
 
-@users.route("/register", methods['GET', 'POST'])
+@users.route("/register", methods=['GET', 'POST'])
 def register():
   form = RegistrationForm()
 
@@ -47,7 +47,7 @@ def logout():
   logout_user()
   return redirect(url_for("core.index"))
 
-@users.route("/account", methods['GET', 'POST'])
+@users.route("/account", methods=['GET', 'POST'])
 @login_required
 def account():
   form = UpdateUserForm()
@@ -64,9 +64,17 @@ def account():
     flash('User Account Updated!')
     return redirect(url_for('users.account'))
 
-  elif request.method = "GET":
+  elif request.method == "GET":
     form.username.data = current_user.username
     form.email.data = current_user.email
 
   profile_image = url_for('static', filename='profile_pics/'+current_user.profile_image)
   return render_template('account.html', profile_image=profile_image, form=form)
+
+
+@users.route("/<username>")
+def user_posts(username):
+  page = request.args.get('page',1,type=int)
+  user = User.query.filter_by(username=username).first_or_404()
+  blog_posts = BlogPost.query.filter_by(author=user).order_by(BlogPost.date.desc()).paginate(page=page, per_page=5)
+  return render_template('user_blog_posts.html', blog_posts=blog_posts, user=user)
